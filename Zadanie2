@@ -1,0 +1,114 @@
+import random
+import tkinter as tk
+from tkinter import messagebox
+
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+
+
+
+N = 50   
+
+
+class NumberApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Generátor čísel 1–120")
+
+        
+        top_frame = tk.Frame(root)
+        top_frame.pack(padx=10, pady=10, fill="x")
+
+        lbl_max = tk.Label(top_frame, text="max =")
+        lbl_max.pack(side="left")
+
+        self.entry_max = tk.Entry(top_frame, width=10)
+        self.entry_max.pack(side="left", padx=5)
+        self.entry_max.insert(0, "100")  # predvolená hodnota
+
+        btn_generate = tk.Button(top_frame, text="Generuj",
+                                 command=self.on_generate)
+        btn_generate.pack(side="left", padx=10)
+
+        # Info o N a MAXVAL
+        self.info_label = tk.Label(top_frame, text=f"N = {N}, MAXVAL = -")
+        self.info_label.pack(side="left", padx=10)
+
+
+        mid_frame = tk.Frame(root)
+        mid_frame.pack(padx=10, pady=(0, 10), fill="both", expand=True)
+
+        lbl_numbers = tk.Label(mid_frame, text="Zvyšné čísla:")
+        lbl_numbers.pack(anchor="w")
+
+        self.text_output = tk.Text(mid_frame, height=8)
+        self.text_output.pack(fill="both", expand=True)
+
+      
+        bottom_frame = tk.Frame(root)
+        bottom_frame.pack(padx=10, pady=(0, 10), fill="both", expand=True)
+
+        self.fig = Figure(figsize=(5, 3), dpi=100)
+        self.ax = self.fig.add_subplot(111)
+        self.ax.set_title("Graf zvyšných čísel")
+        self.ax.set_xlabel("Index")
+        self.ax.set_ylabel("Hodnota")
+
+        self.canvas = FigureCanvasTkAgg(self.fig, master=bottom_frame)
+        self.canvas.get_tk_widget().pack(fill="both", expand=True)
+
+    def on_generate(self):
+        # 1. načítaj MAXVAL
+        max_str = self.entry_max.get().strip()
+        if not max_str:
+            messagebox.showerror("Chyba", "Zadaj hodnotu max.")
+            return
+
+        try:
+            max_val = int(max_str)
+        except ValueError:
+            messagebox.showerror("Chyba", "MAXVAL musí byť celé číslo.")
+            return
+
+        if max_val < 1:
+            messagebox.showerror("Chyba", "MAXVAL musí byť aspoň 1.")
+            return
+
+        
+        numbers = [random.randint(1, 120) for _ in range(N)]
+
+        
+        numbers.sort()
+
+        
+        filtered = [x for x in numbers if x <= max_val]
+
+        
+        self.text_output.delete("1.0", tk.END)
+        if filtered:
+            self.text_output.insert(tk.END, " ".join(str(x) for x in filtered))
+        else:
+            self.text_output.insert(tk.END, "Žiadne čísla nevyhovujú podmienke.")
+
+        
+        self.info_label.config(text=f"N = {N}, MAXVAL = {max_val}")
+
+        
+        self.ax.clear()
+        self.ax.set_title("Graf zvyšných čísel")
+        self.ax.set_xlabel("Index")
+        self.ax.set_ylabel("Hodnota")
+
+        if filtered:
+            self.ax.bar(range(1, len(filtered) + 1), filtered)
+        else:
+            self.ax.text(0.5, 0.5, "Žiadne dáta", ha="center", va="center",
+                         transform=self.ax.transAxes)
+
+        self.canvas.draw_idle()
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = NumberApp(root)
+    root.mainloop()
